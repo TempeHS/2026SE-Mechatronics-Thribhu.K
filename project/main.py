@@ -2,9 +2,8 @@
 import sys
 from machine import Pin
 
-
 # File name of the script to import
-file_name = "v01"
+file_name = "maze_runner"
 
 # Add the path to the sys.path
 sys.path.append("/py_scripts")

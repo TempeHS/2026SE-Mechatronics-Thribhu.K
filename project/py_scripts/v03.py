@@ -32,7 +32,6 @@ my_servo = Servo(
     pwm=servo_pwm, min_us=min_us, max_us=max_us, dead_zone_us=dead_zone_us, freq=freq
 )
 
-
 while True:
     # manually set the servo duty time
     my_servo.set_duty(500)
