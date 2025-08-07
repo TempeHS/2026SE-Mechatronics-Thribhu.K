@@ -1,3 +1,5 @@
+#import "@preview/pintorita:0.1.4"
+
 #align(center, text(19pt)[*Software Requirement Specifications*])
 #line(length: 100%)
 
@@ -134,3 +136,95 @@ _List any additional non-functional requirements_
   columns: (auto, auto),
   [], []
 )
+
+#pagebreak()
+
+= UML Diagram
+
+#show raw.where(lang: "pintora"): it => pintorita.render(it.text)
+
+```pintora
+classDiagram
+    class WheelGroup {
+        - __debug: bool
+        - __lwpin: PWM
+        - __lw: Servo
+        - __rwpin: PWM
+        - __rw: Servo
+
+        + __init__(left_wheel_pin: int, right_wheel_pin: int, debug: bool)
+        + move_forward(speed: float)
+        + stop()
+        + move_left(speed: float)
+        + move_right(speed: float)
+        # percentage_to_duty(percentage: float)
+    }
+
+    class Pin {
+        - __pin: int
+
+        + __init__(pin: int)
+        + value()
+        + high()
+        + low()
+        + toggle()
+    }
+
+    class PWM {
+        - __pin: int
+
+        + __init__(pin: int)
+        + freq(freq: int)
+        + duty_u16(duty: int)
+    }
+
+    class Servo {
+      - pwm: PWM
+      - _move_period_ms: int
+      - _curr_duty: int
+      - dead_zone_us: int
+      + __init__(pwm: PWM, min_us: int, max_us: int, dead_zone_us: int, freq: int)
+      + set_duty(duty_us: int)
+      + set_angle(angle: int)
+      + get_duty(): int
+      + stop()
+      + deinit()
+    }
+
+    class PiicoDev_VEML6040 {
+      - i2c
+      - addr
+      + __init__(bus, freq, sda, scl, addr)
+      + classifyHue(hues, min_brightness)
+      + readRGB()
+      + readHSV()
+    }
+
+    class I2C {
+      + write8(addr, reg, val)
+      + readfrom_mem(addr, reg, len)
+    }
+    
+    class Utils {
+      + sleep_ms(ms)
+      + rgb2hsv(r, g, b)
+    }
+
+    class DichromaticLightSensor {
+        - self.__sensor: int
+        - self.__black: int
+        - self.__white: int
+        - self.current_colour: int
+        + __init__()
+        + is_black(): bool
+        + is_white(): bool
+    }
+    
+    PiicoDev_VEML6040 --> I2C : uses
+    PiicoDev_VEML6040 --> Utils : uses
+    DichromaticLightSensor --> PiicoDev_VEML6040: uses
+
+    Servo --> PWM : uses
+    PWM --> Pin : uses
+    WheelGroup --> Servo : uses
+```

@@ -1,5 +1,6 @@
 from servo import Servo
 from machine import Pin, PWM
+from PiicoDev_VEML6040 import PiicoDev_VEML6040
 import time
 
 print("Running maze runner")
@@ -72,6 +73,29 @@ def percentage_to_duty(percentage: float) -> int:
         duty = int(1500 + (percentage * 1500))
 
     return duty
+
+class DiChromaticLightSensor:
+    def __init__(self):
+        self.__sensor = PiicoDev_VEML6040()
+        # figure out what colours black and white are (the hues)
+        self.__black = 0
+        self.__white = 0
+        # todo: get this to work
+        # self.__current_light = self.__sensor.
+    
+    def is_black(self) -> bool:
+        """
+        Returns a boolean if the light sensor detects a colour that is black
+        or is of the shade of black
+        """
+        pass
+
+    def is_white(self) -> bool:
+        """
+        Returns a boolean if the light sensor detects a colour that is white
+        or is of the shade of white
+        """
+        pass
 
 wheel_group = WheelGroup(20, 16, debug_scope["wheel"])
 
