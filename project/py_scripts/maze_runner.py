@@ -11,7 +11,8 @@ print("Running maze runner")
 debug_scope: dict[str, bool] = {
     "main": True,
     "wheel": True,
-    "light": True
+    "light": True,
+    "ultrasonic": True
 }
 
 class WheelGroup:
@@ -121,42 +122,93 @@ class DiChromaticLightSensor:
         else:
             return False
 
-# class DualUltrasonicSensorGroup:
-#     def __init__(self, sensors: dict[str, list[int]]):
-        
-
-# sensors = DualUltrasonicSensorGroup()
-
+class DualUltrasonicSensorGroup:
+    def __init__(self, side_location: list[int], front_location: list[int], debug: bool):
+        self.__front = PiicoDev_Ultrasonic(id=front_location)
+        self.__side = PiicoDev_Ultrasonic(id=side_location)
+        self.__debug = debug
+    
+    def debug(self):
+        if self.__debug:
+            print(f"Front Distance: {self.__front.distance_mm}   Side Distance: {self.__side.distance_mm}")
+    
+    def values(self) -> dict:
+        return {
+            "front": self.__front.distance_mm,
+            "side": self.__side.distance_mm
+        }
+    
+    def is_side_detected(self, bounds: int) -> bool:
+        if self.__side.distance_mm < bounds:
+            return True
+        else:
+            return False
+    
+    def is_front_detected(self, bounds: int) -> bool:
+        if self.__front.distance_mm < bounds:
+            return True
+        else:
+            return False
+    
+ultrasonic_sensor = DualUltrasonicSensorGroup([1, 0, 0, 0], [0, 0, 0, 0], debug_scope["ultrasonic"])
 wheel_group = WheelGroup(20, 16, debug_scope["wheel"])
 light_sensor = DiChromaticLightSensor(debug_scope["light"])
 
 main_debug = debug_scope["main"]
 
-stop_signal = False
+front_detected = False
+side_detected = False
 
 async def wheel_task():
-    global stop_signal
+    global front_detected
+    global side_detected
     while True:
-        if not stop_signal:
-            wheel_group.move_forward(0.5)
-        else:
-            wheel_group.stop()
-        await asyncio.sleep(0.5)
+        if front_detected:
+            wheel_group.move_left(0.25)
+            if main_debug: print("obstacle detected at the front")
+            front_detected = False
+            await asyncio.sleep(2)
 
-async def sensor_task():
-    global stop_signal
-    while True:
-        if light_sensor.is_white():
-            print("White detected — stopping wheels")
-            stop_signal = True
+        elif side_detected:
+            wheel_group.move_left(0.25)
+            if main_debug: print("obstacle detected at the front")
+            side_detected = False
+            await asyncio.sleep(2)
+
         else:
-            stop_signal = False
-        await asyncio.sleep(0.2)
+            wheel_group.move_forward(0.25)
+            if main_debug: print("no obstace detected")
+            await asyncio.sleep(0.5)
+
+async def ultrasonic_task():
+    global front_detected
+    global side_detected
+    while True:
+        if ultrasonic_sensor.is_front_detected(100):
+            front_detected = True
+        
+        if ultrasonic_sensor.is_side_detected(100):
+            side_detected = True
+        
+        ultrasonic_sensor.debug()
+        await asyncio.sleep(0.1)
 
 async def main():
     await asyncio.gather(
         wheel_task(),
-        sensor_task()
+        ultrasonic_task(),
     )
 
 asyncio.run(main())
+
+# the graveyard
+#
+# async def light_sensor_task():
+#     global stop_signal
+#     while True:
+#         if light_sensor.is_white():
+#             print("White detected — stopping wheels")
+#             stop_signal = True
+#         else:
+#             stop_signal = False
+#         await asyncio.sleep(0.2)
