@@ -150,8 +150,8 @@ class DualUltrasonicSensorGroup:
         else:
             return False
     
-ultrasonic_sensor = DualUltrasonicSensorGroup([1, 0, 0, 0], [0, 0, 0, 0], debug_scope["ultrasonic"])
-wheel_group = WheelGroup(20, 16, debug_scope["wheel"])
+ultrasonic_sensor = DualUltrasonicSensorGroup([0, 0, 0, 0], [1, 0, 0, 0], debug_scope["ultrasonic"])
+wheel_group = WheelGroup(20, 16, debug_scope["wheel"]) #20
 light_sensor = DiChromaticLightSensor(debug_scope["light"])
 
 main_debug = debug_scope["main"]
@@ -159,47 +159,22 @@ main_debug = debug_scope["main"]
 front_detected = False
 side_detected = False
 
-async def wheel_task():
-    global front_detected
-    global side_detected
-    while True:
-        if front_detected:
-            wheel_group.move_left(0.25)
-            if main_debug: print("obstacle detected at the front")
-            front_detected = False
-            await asyncio.sleep(2)
-
-        elif side_detected:
-            wheel_group.move_left(0.25)
-            if main_debug: print("obstacle detected at the front")
-            side_detected = False
-            await asyncio.sleep(2)
-
-        else:
-            wheel_group.move_forward(0.25)
-            if main_debug: print("no obstace detected")
-            await asyncio.sleep(0.5)
-
-async def ultrasonic_task():
-    global front_detected
-    global side_detected
-    while True:
-        if ultrasonic_sensor.is_front_detected(100):
-            front_detected = True
-        
-        if ultrasonic_sensor.is_side_detected(100):
-            side_detected = True
-        
-        ultrasonic_sensor.debug()
-        await asyncio.sleep(0.1)
-
-async def main():
-    await asyncio.gather(
-        wheel_task(),
-        ultrasonic_task(),
-    )
-
-asyncio.run(main())
+while True:
+    if ultrasonic_sensor.is_front_detected(150):
+        wheel_group.move_right(0.15)
+        if main_debug: print("turning left coz obs detected @ front")
+        front_detected = True
+        time.sleep(1)
+    if ultrasonic_sensor.is_side_detected(150):
+        wheel_group.move_left(0.15)
+        if main_debug: print("turning right coz no obs detected @ side")
+        time.sleep(1)
+        front_detected = False
+    wheel_group.move_forward(0.25)
+    if main_debug: print("no obstace detected")
+    time.sleep(1)
+    
+    ultrasonic_sensor.debug()
 
 # the graveyard
 #
