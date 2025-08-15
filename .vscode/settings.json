@@ -1,3 +1,18 @@
 {
-    "micropico.syncFolder": "project"
+    "micropico.syncFolder": "project",
+    "python.analysis.typeshedPaths": [
+        ".venv/Lib/site-packages",
+        "typings",
+        "project"
+    ],
+    "python.analysis.extraPaths": [
+        "lib",
+        "project",
+        "py_scripts"
+    ],
+    "python.autoComplete.extraPaths": [
+        "C:\\Users\\thrib\\2026SE-Mechatronics-Thribhu.K\\project\\py_scripts",
+        "C:\\Users\\thrib\\2026SE-Mechatronics-Thribhu.K\\project\\lib",
+        "C:\\Users\\thrib\\2026SE-Mechatronics-Thribhu.K\\project\\examples"
+    ]
 }
