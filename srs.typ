@@ -79,6 +79,10 @@ _Give a summary of the functions the software would perform and the features to 
 
 // Should I do this? If I have already documented everything using doc comments, would i still do it again???
 
+One function should control the robot and get everything started, specifically MazeRunnerStateMachine.update(). Inside that MazeRunnerStateMachine, there is code for updating and pushing the values of the wheel duties to the servos, fetching teh values of the ultrasonic sensor, the logic/controller itself and the lgiht sensor + display. 
+
+I expect the robot to navigate around a maze by following a wall. 
+
 #pagebreak()
 
 = Functional Requirements
@@ -109,7 +113,6 @@ For the display, we used PiicoDev's SSD1306, which is a 128x64 pixel screen. I d
 == User Interface Requirements
 _Describe the logic behind the interactions between the users and the software (screen layouts, style guides, etc.)._
 
-// expand on this
 For the UI, they display the current state, which is text that is rendered onto the screen. It swaps between the different screens in real time because of the functions being asynchronous.
 
 When a victim is sensed/detected, it will stop in its tracks and start blaring an alarm using the inbuilt speaker (not implemented, will not implement), letting the user know of its aid. 
@@ -123,6 +126,10 @@ So far, the software is tested on the following:
 - PiicoDev SSD1306
 - PiicoDev Ultrasonic
 - [INSERT SERVO MODEL NAME]
+
+No network is required as the MCU does not support networking. 
+
+For communicating with the different components, they use the I2C protocol to communicate digital data between eachother. I2C uses a master-slave configuration, where the MCU is the master and the component is the slave. 
 
 == Software interface requirements
 _Include the connections between your product and other software components, including frontend/backend framework, libraries, etc._
@@ -196,154 +203,154 @@ _List any additional non-functional requirements_
   [MCU], [Microcontroller Unit, just an short hand word for the Raspberry Pi Pico 2]
 )
 
-#pagebreak()
+// #pagebreak()
 
-= UML Diagram
+// = UML Diagram
 
-#show raw.where(lang: "pintora"): it => pintorita.render(it.text)
+// #show raw.where(lang: "pintora"): it => pintorita.render(it.text)
 
-```pintora
-classDiagram
-    class WheelGroup {
-        - __debug: bool
-        - __lwpin: PWM
-        - __lw: Servo
-        - __rwpin: PWM
-        - __rw: Servo
+// ```pintora
+// classDiagram
+//     class WheelGroup {
+//         - __debug: bool
+//         - __lwpin: PWM
+//         - __lw: Servo
+//         - __rwpin: PWM
+//         - __rw: Servo
 
-        + __init__(left_wheel_pin: int, right_wheel_pin: int, debug: bool)
-        + move_forward(speed: float)
-        + stop()
-        + move_left(speed: float)
-        + move_right(speed: float)
-        # percentage_to_duty(percentage: float)
-    }
+//         + __init__(left_wheel_pin: int, right_wheel_pin: int, debug: bool)
+//         + move_forward(speed: float)
+//         + stop()
+//         + move_left(speed: float)
+//         + move_right(speed: float)
+//         # percentage_to_duty(percentage: float)
+//     }
 
-    class Pin {
-        - __pin: int
+//     class Pin {
+//         - __pin: int
 
-        + __init__(pin: int)
-        + value()
-        + high()
-        + low()
-        + toggle()
-    }
+//         + __init__(pin: int)
+//         + value()
+//         + high()
+//         + low()
+//         + toggle()
+//     }
 
-    class PWM {
-        - __pin: int
+//     class PWM {
+//         - __pin: int
 
-        + __init__(pin: int)
-        + freq(freq: int)
-        + duty_u16(duty: int)
-    }
+//         + __init__(pin: int)
+//         + freq(freq: int)
+//         + duty_u16(duty: int)
+//     }
 
-    class Servo {
-      - pwm: PWM
-      - _move_period_ms: int
-      - _curr_duty: int
-      - dead_zone_us: int
-      + __init__(pwm: PWM, min_us: int, max_us: int, dead_zone_us: int, freq: int)
-      + set_duty(duty_us: int)
-      + set_angle(angle: int)
-      + get_duty(): int
-      + stop()
-      + deinit()
-    }
+//     class Servo {
+//       - pwm: PWM
+//       - _move_period_ms: int
+//       - _curr_duty: int
+//       - dead_zone_us: int
+//       + __init__(pwm: PWM, min_us: int, max_us: int, dead_zone_us: int, freq: int)
+//       + set_duty(duty_us: int)
+//       + set_angle(angle: int)
+//       + get_duty(): int
+//       + stop()
+//       + deinit()
+//     }
 
-    class PiicoDev_VEML6040 {
-      - i2c
-      - addr
-      + __init__(bus, freq, sda, scl, addr)
-      + classifyHue(hues, min_brightness)
-      + readRGB()
-      + readHSV()
-    }
+//     class PiicoDev_VEML6040 {
+//       - i2c
+//       - addr
+//       + __init__(bus, freq, sda, scl, addr)
+//       + classifyHue(hues, min_brightness)
+//       + readRGB()
+//       + readHSV()
+//     }
 
-    class I2C {
-      + write8(addr, reg, val)
-      + readfrom_mem(addr, reg, len)
-    }
+//     class I2C {
+//       + write8(addr, reg, val)
+//       + readfrom_mem(addr, reg, len)
+//     }
     
-    class Utils {
-      + sleep_ms(ms)
-      + rgb2hsv(r, g, b)
-    }
+//     class Utils {
+//       + sleep_ms(ms)
+//       + rgb2hsv(r, g, b)
+//     }
 
-    class LightSensor {
-        -__sensor: PiicoDev_VEML6040
-        -__current_light: dict
-        -__debug: bool
-        + __init__()
-        +update()
-        +is_green(): bool
-        +debug()
-    }
+//     class LightSensor {
+//         -__sensor: PiicoDev_VEML6040
+//         -__current_light: dict
+//         -__debug: bool
+//         + __init__()
+//         +update()
+//         +is_green(): bool
+//         +debug()
+//     }
 
-    class UnitTests {
-        +wheel_group_unittest(wheel_group: WheelGroup)
-        +light_sensor_unittest(light_sensor: LightSensor)
-        +ultrasonic_sensor_unittest(ultrasonic_sensor: DualUltrasonicSensorGroup)
-    }
+//     class UnitTests {
+//         +wheel_group_unittest(wheel_group: WheelGroup)
+//         +light_sensor_unittest(light_sensor: LightSensor)
+//         +ultrasonic_sensor_unittest(ultrasonic_sensor: DualUltrasonicSensorGroup)
+//     }
 
-    class MazeRunnerStateMachine {
-        -__wheel_group: WheelGroup
-        -__ultrasonic_sensor: DualUltrasonicSensorGroup
-        -__display: LCDDisplay
-        -__light_sensor: LightSensor
-        -state: State
-        -__bound: int
-        -__debug: bool
-        + __init__()
-        +update()
-    }
+//     class MazeRunnerStateMachine {
+//         -__wheel_group: WheelGroup
+//         -__ultrasonic_sensor: DualUltrasonicSensorGroup
+//         -__display: LCDDisplay
+//         -__light_sensor: LightSensor
+//         -state: State
+//         -__bound: int
+//         -__debug: bool
+//         + __init__()
+//         +update()
+//     }
 
-    class State {
-        <<enumeration>>
-        NO_OBJECT_FOUND
-        SEARCHING_FOR_GAP
-        TURNING_TO_SIDE
-        FOUND_GAP
-        DEAD_END
-        VICTIM_SENSED
-    }
+//     class State {
+//         <<enumeration>>
+//         NO_OBJECT_FOUND
+//         SEARCHING_FOR_GAP
+//         TURNING_TO_SIDE
+//         FOUND_GAP
+//         DEAD_END
+//         VICTIM_SENSED
+//     }
 
-    class LCDDisplay {
-        -display
-        +show_range(front_sensor: int, side_sensor: int)
-        +show_obs_detected()
-        +render()
-    }
+//     class LCDDisplay {
+//         -display
+//         +show_range(front_sensor: int, side_sensor: int)
+//         +show_obs_detected()
+//         +render()
+//     }
 
-    class DualUltrasonicSensorGroup {
-        -__front: PiicoDev_Ultrasonic
-        -__side: PiicoDev_Ultrasonic
-        -__debug: bool
-        +values(): dict
-        +is_side_detected(bounds: int): bool
-        +is_front_detected(bounds: int): bool
-        +debug()
-    }
+//     class DualUltrasonicSensorGroup {
+//         -__front: PiicoDev_Ultrasonic
+//         -__side: PiicoDev_Ultrasonic
+//         -__debug: bool
+//         +values(): dict
+//         +is_side_detected(bounds: int): bool
+//         +is_front_detected(bounds: int): bool
+//         +debug()
+//     }
 
-    class PiicoDev_Ultrasonic {
-      uhh...
-    }
+//     class PiicoDev_Ultrasonic {
+//       uhh...
+//     }
 
-    MazeRunnerStateMachine --> WheelGroup : composes
-    MazeRunnerStateMachine --> DualUltrasonicSensorGroup : composes
-    MazeRunnerStateMachine --> LCDDisplay : composes
-    MazeRunnerStateMachine --> LightSensor : composes
-    WheelGroup ..> Servo : depends on
-    DualUltrasonicSensorGroup ..> PiicoDev_Ultrasonic : depends on
-    LightSensor ..> PiicoDev_VEML6040 : depends on
-    MazeRunnerStateMachine ..> State : uses
-    UnitTests --> WheelGroup : tests
-    UnitTests --> LightSensor : tests
-    UnitTests --> DualUltrasonicSensorGroup : tests
+//     MazeRunnerStateMachine --> WheelGroup : composes
+//     MazeRunnerStateMachine --> DualUltrasonicSensorGroup : composes
+//     MazeRunnerStateMachine --> LCDDisplay : composes
+//     MazeRunnerStateMachine --> LightSensor : composes
+//     WheelGroup ..> Servo : depends on
+//     DualUltrasonicSensorGroup ..> PiicoDev_Ultrasonic : depends on
+//     LightSensor ..> PiicoDev_VEML6040 : depends on
+//     MazeRunnerStateMachine ..> State : uses
+//     UnitTests --> WheelGroup : tests
+//     UnitTests --> LightSensor : tests
+//     UnitTests --> DualUltrasonicSensorGroup : tests
     
-    PiicoDev_VEML6040 --> I2C : uses
-    PiicoDev_VEML6040 --> Utils : uses
+//     PiicoDev_VEML6040 --> I2C : uses
+//     PiicoDev_VEML6040 --> Utils : uses
 
-    Servo --> PWM : depends on
-    PWM --> Pin : depends on
-    WheelGroup --> Servo : depends on
-```
+//     Servo --> PWM : depends on
+//     PWM --> Pin : depends on
+//     WheelGroup --> Servo : depends on
+// ```

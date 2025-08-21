@@ -100,13 +100,13 @@ class LightSensor:
         self.__debug = debug
         self.__current_light = self.__sensor.readHSV()
     
-    def debug(self):
+    async def debug(self):
         """
         Prints out the debug values. Can be run as many times as you wish, however only runs 
         when the debug flag is set to true. 
         """
-        if self.__debug:
-            print(str(self.__current_light["blue"]) + " Blue  " + str(self.__current_light["green"]) + " Green  " + str(self.__current_light["red"]) + " Red")
+        await self.update()
+        print(self.__current_light)
     
     async def update(self):
         """
@@ -125,10 +125,8 @@ class LightSensor:
         """
         
         hue = self.__current_light['hue']
-        if hue > 75 and hue < 85:
-            return True
-        else:
-            return False
+        return (80 < hue < 170)
+
 
 class DualUltrasonicSensorGroup:
     """
@@ -316,9 +314,10 @@ class MazeRunnerStateMachine:
         vals = await self.__ultrasonic_sensor.values()
         front = vals["front"]
         side = vals["side"]
-        await self.__display.show_range(front, side)
+        # await self.__display.show_range(front, side)
         
         if self.__debug: print(f"Current State: {state_to_string(self.state)}")
+        if self.__debug: await self.__light_sensor.debug()
         # render current state onto display
         await self.__display.render_current_state(self.state)
         
@@ -326,10 +325,10 @@ class MazeRunnerStateMachine:
             if front < self.__bound:
                 self.state = State.TURNING_TO_SIDE
             else:
-                self.__wheel_group.move_forward(0.5)
+                self.__wheel_group.move_forward(0.75)
                 await asyncio.sleep(0.1)
         elif self.state == State.TURNING_TO_SIDE:
-            self.__wheel_group.move_left(0.5) # todo: fix up and figure out why this is not working
+            self.__wheel_group.move_left(0.75)
             await asyncio.sleep(1)
             self.__wheel_group.stop()
             await asyncio.sleep(1)
@@ -338,10 +337,10 @@ class MazeRunnerStateMachine:
             if side > self.__bound+100:
                 self.state = State.FOUND_GAP
             else:
-                self.__wheel_group.move_forward(0.5)
+                self.__wheel_group.move_forward(0.75)
                 await asyncio.sleep(0.1)
         elif self.state == State.FOUND_GAP:
-            self.__wheel_group.move_right(0.5) # todo: fix up and figure out why this is not working
+            self.__wheel_group.move_left(-0.75) # idk why its negative BUT IT WORKS HOORAYYYYY
             await asyncio.sleep(1)
             self.__wheel_group.stop()
             await asyncio.sleep(1)
@@ -349,147 +348,19 @@ class MazeRunnerStateMachine:
         elif self.state == State.VICTIM_SENSED:
             self.__wheel_group.stop()
             await asyncio.sleep(1)
+            if await self.__light_sensor.is_green():
+                self.state = State.NO_OBJECT_FOUND
         
+        await self.__light_sensor.debug()
         if await self.__light_sensor.is_green():
             self.state = State.VICTIM_SENSED
 
-runner = MazeRunnerStateMachine(WheelGroup(20, 16, debug_scope["wheel"]), DualUltrasonicSensorGroup([0, 0, 0, 0], [1, 0, 0, 0], debug_scope["ultrasonic"]), LCDDisplay(), LightSensor(debug_scope["light"]), debug=debug_scope["main"])
+runner = MazeRunnerStateMachine(WheelGroup(16, 20, debug_scope["wheel"]), DualUltrasonicSensorGroup([0, 0, 0, 0], [1, 0, 0, 0], debug_scope["ultrasonic"]), LCDDisplay(), LightSensor(debug_scope["light"]), debug=debug_scope["main"])
 
 async def task():
     while True:
         await runner.update()
         await asyncio.sleep(0.1) # required for the cpu to catch up
 
-async def test():
-    unittests = UnitTests()
-    # note: yes i know im not supposed to use protected members. no, im not going
-    # to move them to another variable. 
-    await unittests.wheel_group_unittest(runner.__wheel_group)
-    await unittests.light_sensor_unittest(runner.__light_sensor)
-    await unittests.ultrasonic_sensor_unittest(runner.__ultrasonic_sensor)
-
 # runs the async runtime
 asyncio.run(task())
-
-class UnitTests:
-    """
-    Unittests for all the other libraries. 
-    """
-    def __init__(self):
-        pass
-    
-    # todo: test out if these functions work
-    
-    async def wheel_group_unittest(self, wheel_group: WheelGroup):
-        print("""
-=================================================
-            WHEEL GROUP UNITTESTS
-=================================================
-            """)
-        print("-----\nMoving Forward at 50%% speed")
-        wheel_group.move_forward(0.5)
-        await asyncio.sleep(1)
-        print("     Done!")
-        await asyncio.sleep(1)
-        
-        print("-----\nMoving Back at 50%% speed")
-        wheel_group.move_forward(-0.5)
-        await asyncio.sleep(1)
-        print("     Done!")
-        await asyncio.sleep(1)
-        
-        print("-----\nMoving Left (aiming for 90 degree turn)")
-        wheel_group.move_left(0.75)
-        await asyncio.sleep(0.1)
-        print("     Done!")
-        await asyncio.sleep(1)
-        
-        print("-----\nMoving Right (aiming for 90 degree turn)")
-        wheel_group.move_right(0.75)
-        await asyncio.sleep(0.1)
-        print("     Done!")
-        await asyncio.sleep(1)
-        
-        print("-----\nAttempting to stop movement with 0.0 speed")
-        wheel_group.move_forward(0.0)
-        await asyncio.sleep(1)
-        print("     Done!")
-        
-        print("-----\nAttempting to stop movement with stop function")
-        wheel_group.stop()
-        await asyncio.sleep(1)
-        print("     Done!")
-        print("-----")
-        print("Wheel Group unittests are completed!")
-        # print("\n----- Summary -----")
-    
-    async def light_sensor_unittest(self, light_sensor: LightSensor):
-        print("""
-=================================================
-            LIGHT SENSOR UNITTESTS
-=================================================
-        """)
-        print("Starting light sensor readings...")
-        green_hits = 0
-        samples = 6
-        for i in range(samples):
-            await light_sensor.update()
-            light_sensor.debug()
-            try:
-                is_g = await light_sensor.is_green()
-            except Exception as e:
-                print(f"  Sample {i+1}: is_green() raised error: {e}")
-                is_g = False
-            print(f"  Sample {i+1}: is_green -> {is_g}")
-            if is_g:
-                green_hits += 1
-            await asyncio.sleep(0.5)
-
-        print("\n----- Summary -----")
-        if green_hits > 0:
-            print(f"  Hit! Detected green in {green_hits}/{samples} samples")
-        else:
-            print("  No green detected in samples :(")
-        print("\nLight sensor unittest complete.")
-    
-    async def ultrasonic_sensor_unittest(self, ultrasonic_sensor: DualUltrasonicSensorGroup):
-        print("""
-=================================================
-        ULTRASONIC SENSOR UNITTESTS
-=================================================
-        """)
-        samples = 6
-        delay = 0.5
-        bound = 100
-
-        print(f"Taking {samples} samples, {delay}s apart. Detection bound = {bound}mm\n")
-        front_hits = 0
-        side_hits = 0
-        got_reading = False
-
-        for i in range(samples):
-            vals = await ultrasonic_sensor.values()
-            front = vals.get("front")
-            side = vals.get("side")
-
-            f_detect = ultrasonic_sensor.is_front_detected(bound)
-            s_detect = ultrasonic_sensor.is_side_detected(bound)
-
-            if front not in (None, 0):
-                got_reading = True
-            if f_detect:
-                front_hits += 1
-            if s_detect:
-                side_hits += 1
-
-            print(f"Sample {i+1}: Front = {front} mm\tSide = {side} mm\tFrontDetected={f_detect}\tSideDetected={s_detect}")
-            await asyncio.sleep(delay)
-
-        print("\n----- Summary -----")
-        if got_reading:
-            print(f"Front detected {front_hits}/{samples} samples")
-            print(f"Side  detected {side_hits}/{samples} samples")
-            print("Hit! Ultrasonic sensors returning measurements.")
-        else:
-            print("No measurements returned :(. Check wiring / IDs / power.")
-        print("Ultrasonic sensor unittest complete.\n")
