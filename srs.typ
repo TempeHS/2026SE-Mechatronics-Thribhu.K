@@ -16,7 +16,7 @@
 #table(
   columns: (auto, auto, auto, auto),
   [*Version*], [*Author*], [*Version Description*], [*Date Completed*],
-  [], [], [], []
+  [0.1.0], [Thribhu Krishnan], [Implemented the primitive features of the maze following robot], [21/08/25]
 )
 
 == Review History
