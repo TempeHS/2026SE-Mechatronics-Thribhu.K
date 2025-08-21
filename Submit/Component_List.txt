@@ -1,0 +1,22 @@
+Component List:
+
+1x Raspberry Pi Pico 2
+1x Custom made PCB
+    - 2x Electrolytic capacitor
+    - 2x Ceramic capacitor
+    - 2x Terminal Blocks
+    - 3x Diodes
+    - 1x Voltage Regulator
+    - 1x Fuse
+    - 25x Pin Headers
+2x RCWL-1601
+2x PiicoDev_Ultrasonic modules
+1x Battery Pack + 2x Batteries
+1x PiicoDev OLED Module SSD1306
+1x Light Sensor
+2x Servos
+    - 2x Wheels
+1x PiicoDev Expansion Board
+1x Omnidirectional Wheel
+
++ Chassis of choice

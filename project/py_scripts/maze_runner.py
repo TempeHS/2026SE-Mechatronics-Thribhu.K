@@ -348,19 +348,20 @@ class MazeRunnerStateMachine:
         elif self.state == State.VICTIM_SENSED:
             self.__wheel_group.stop()
             await asyncio.sleep(1)
-            if await self.__light_sensor.is_green():
+            if not await self.__light_sensor.is_green():
                 self.state = State.NO_OBJECT_FOUND
         
         await self.__light_sensor.debug()
+        await self.__light_sensor.update()
         if await self.__light_sensor.is_green():
             self.state = State.VICTIM_SENSED
 
 runner = MazeRunnerStateMachine(WheelGroup(16, 20, debug_scope["wheel"]), DualUltrasonicSensorGroup([0, 0, 0, 0], [1, 0, 0, 0], debug_scope["ultrasonic"]), LCDDisplay(), LightSensor(debug_scope["light"]), debug=debug_scope["main"])
 
-async def task():
+async def main():
     while True:
         await runner.update()
         await asyncio.sleep(0.1) # required for the cpu to catch up
 
 # runs the async runtime
-asyncio.run(task())
+asyncio.run(main())
