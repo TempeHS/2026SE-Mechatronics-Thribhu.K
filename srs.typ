@@ -1,4 +1,5 @@
-#import "@preview/pintorita:0.1.4"
+#import "@preview/muchpdf:0.1.1" : *
+#import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 
 #align(center, text(19pt)[*Software Requirement Specifications*])
 #line(length: 100%)
@@ -98,7 +99,7 @@ The Raspberry Pi Pico 2 runs on the MicroPython language, which is a subset of P
 
 In terms of hardware, the chassis is built from laser engraved wood, built custom by Mr Jones (our teacher) and carved/engraved at the school. There are also 3D printed components such as a holder for the Pico MCU. On top of that, there is a custom made PCB that connects the different servos, displays, sensors with components such as diodes, capacitators, voltage regulators, fuses, and more, soldered (by hand) by the students themselves (me [Thribhu], Max and Owen). 
 
-For the servo, we are provided with a [INSERT SERVO MODEL NAME], which is a significant improve from iSTEM's same challenge (which used cheap wheels and badly configured servos). 
+For the servo, we are provided with a DR15SMG, which is a significant improve from iSTEM's same challenge (which used cheap wheels and badly configured servos). 
 
 For the ultrasonic sensors, we used the PiicoDev_Ultrasonic module to read from the values. I made the bound 100mm. 
 
@@ -125,7 +126,7 @@ So far, the software is tested on the following:
 - PiicoDev VEML6040
 - PiicoDev SSD1306
 - PiicoDev Ultrasonic
-- [INSERT SERVO MODEL NAME]
+- DR15SMG Servo
 
 No network is required as the MCU does not support networking. 
 
@@ -171,10 +172,12 @@ The robot requires an MCU, two servos for wheels, one display for status, two se
 == Reliability
 _Calculate what the critical failure time of your product would be under normal usage._
 
-Under normal time, there is a small margin of error, with there being [INSERT PERCENTAGE]% amount of failures, which is exceptionally good for such an autonomous robot. 
+Under normal time, there is a small margin of error, with there being 10% amount of failures, which is exceptionally good for such an autonomous robot with primitive code
 
 == Scalability
 _Calculate the highest workloads under which your software will still perform as expected._
+
+In terms of scalability, this robot has a higher chance of crashing due to the code running with Python, which is a garbage collected language and in such a case of high memory usage, it can break and cause the robot to stop working. 
 
 == Maintainability
 _Describe how continuous integration should be used to deploy features and bug fixes quickly._
@@ -195,162 +198,86 @@ _List any additional non-functional requirements_
 
 #pagebreak()
 
+= Planning, Modelling and Simulations
+
+== UML Class Diagram
+#figure(
+  image("Submit/UML.svg"),
+  caption: [
+    UML Class Diagram
+  ]
+)
+== Data Flow Diagrams
+#figure(
+  image("Submit/Level 0 Diagram.svg"),
+  caption: [
+    Level 0 Data Flow Diagram
+  ]
+)
+#figure(
+  image("Submit/Level 1 Diagram.svg"),
+  caption: [
+    Level 1 Data Flow Diagram
+  ]
+)
+
+== Flowchart
+#figure(
+  image("Submit/Flowchart.svg"),
+  caption: [
+    Logic Flowchart
+  ]
+)
+
+== Wiring Diagram
+#muchpdf(
+  read("Submit/Circuit_Diagram.pdf", encoding: none)
+)
+
+== Material Components List
+- 1x Raspberry Pi Pico 2
+- 1x Custom made PCB
+    - 2x 100 μf Electrolytic capacitor
+    - 2x 100 pf Ceramic capacitor
+    - 2x Terminal Blocks
+    - 3x Diodes
+    - 1x Voltage Regulator
+    - 1x Fuse
+    - 25x Pin Headers
+- 2x RCWL-1601
+- 2x PiicoDev_Ultrasonic modules
+- 1x Battery Pack + 2x Batteries
+- 1x PiicoDev OLED Module SSD1306
+- 1x Light Sensor
+- 2x Servos
+    - 2x Wheels
+- 1x PiicoDev Expansion Board
+- 1x Omnidirectional Wheel
+- Chassis of choice
+
+== Power Supply Diagram and Calculations
+#diagram(
+  $
+  "Battery Pack (2x 3.7V batteries) = 7.4V" edge(->) & "Capacitators (7.4V - (0.5*2) = 6.4V)" edge("dl", ->) \ "Deamplifier (6.4V to 5V)" edge(->) & "Servos (5V intake)"
+                   $
+)
+
+== Online Simulations
+#figure(
+  image("Submit/Simulation.png"),
+  caption: [
+    Online Simulation using Wokwi
+  ]
+)
+
+#pagebreak()
+
 = Definitions and acronyms
 
 #table(
   columns: (auto, auto),
   [*Word*], [*Definition*],
-  [MCU], [Microcontroller Unit, just an short hand word for the Raspberry Pi Pico 2]
+  [MCU], [Microcontroller Unit, just an short hand word for the Raspberry Pi Pico 2],
+  [OOP], [Object Orientated Programming - A paradigm that uses classes to create a "blueprint" that contains data and functions],
+  [PWM], [Pulse Width Modulation - A method of controlling analog devices and sending power digitally]
 )
-
-// #pagebreak()
-
-// = UML Diagram
-
-// #show raw.where(lang: "pintora"): it => pintorita.render(it.text)
-
-// ```pintora
-// classDiagram
-//     class WheelGroup {
-//         - __debug: bool
-//         - __lwpin: PWM
-//         - __lw: Servo
-//         - __rwpin: PWM
-//         - __rw: Servo
-
-//         + __init__(left_wheel_pin: int, right_wheel_pin: int, debug: bool)
-//         + move_forward(speed: float)
-//         + stop()
-//         + move_left(speed: float)
-//         + move_right(speed: float)
-//         # percentage_to_duty(percentage: float)
-//     }
-
-//     class Pin {
-//         - __pin: int
-
-//         + __init__(pin: int)
-//         + value()
-//         + high()
-//         + low()
-//         + toggle()
-//     }
-
-//     class PWM {
-//         - __pin: int
-
-//         + __init__(pin: int)
-//         + freq(freq: int)
-//         + duty_u16(duty: int)
-//     }
-
-//     class Servo {
-//       - pwm: PWM
-//       - _move_period_ms: int
-//       - _curr_duty: int
-//       - dead_zone_us: int
-//       + __init__(pwm: PWM, min_us: int, max_us: int, dead_zone_us: int, freq: int)
-//       + set_duty(duty_us: int)
-//       + set_angle(angle: int)
-//       + get_duty(): int
-//       + stop()
-//       + deinit()
-//     }
-
-//     class PiicoDev_VEML6040 {
-//       - i2c
-//       - addr
-//       + __init__(bus, freq, sda, scl, addr)
-//       + classifyHue(hues, min_brightness)
-//       + readRGB()
-//       + readHSV()
-//     }
-
-//     class I2C {
-//       + write8(addr, reg, val)
-//       + readfrom_mem(addr, reg, len)
-//     }
-    
-//     class Utils {
-//       + sleep_ms(ms)
-//       + rgb2hsv(r, g, b)
-//     }
-
-//     class LightSensor {
-//         -__sensor: PiicoDev_VEML6040
-//         -__current_light: dict
-//         -__debug: bool
-//         + __init__()
-//         +update()
-//         +is_green(): bool
-//         +debug()
-//     }
-
-//     class UnitTests {
-//         +wheel_group_unittest(wheel_group: WheelGroup)
-//         +light_sensor_unittest(light_sensor: LightSensor)
-//         +ultrasonic_sensor_unittest(ultrasonic_sensor: DualUltrasonicSensorGroup)
-//     }
-
-//     class MazeRunnerStateMachine {
-//         -__wheel_group: WheelGroup
-//         -__ultrasonic_sensor: DualUltrasonicSensorGroup
-//         -__display: LCDDisplay
-//         -__light_sensor: LightSensor
-//         -state: State
-//         -__bound: int
-//         -__debug: bool
-//         + __init__()
-//         +update()
-//     }
-
-//     class State {
-//         <<enumeration>>
-//         NO_OBJECT_FOUND
-//         SEARCHING_FOR_GAP
-//         TURNING_TO_SIDE
-//         FOUND_GAP
-//         DEAD_END
-//         VICTIM_SENSED
-//     }
-
-//     class LCDDisplay {
-//         -display
-//         +show_range(front_sensor: int, side_sensor: int)
-//         +show_obs_detected()
-//         +render()
-//     }
-
-//     class DualUltrasonicSensorGroup {
-//         -__front: PiicoDev_Ultrasonic
-//         -__side: PiicoDev_Ultrasonic
-//         -__debug: bool
-//         +values(): dict
-//         +is_side_detected(bounds: int): bool
-//         +is_front_detected(bounds: int): bool
-//         +debug()
-//     }
-
-//     class PiicoDev_Ultrasonic {
-//       uhh...
-//     }
-
-//     MazeRunnerStateMachine --> WheelGroup : composes
-//     MazeRunnerStateMachine --> DualUltrasonicSensorGroup : composes
-//     MazeRunnerStateMachine --> LCDDisplay : composes
-//     MazeRunnerStateMachine --> LightSensor : composes
-//     WheelGroup ..> Servo : depends on
-//     DualUltrasonicSensorGroup ..> PiicoDev_Ultrasonic : depends on
-//     LightSensor ..> PiicoDev_VEML6040 : depends on
-//     MazeRunnerStateMachine ..> State : uses
-//     UnitTests --> WheelGroup : tests
-//     UnitTests --> LightSensor : tests
-//     UnitTests --> DualUltrasonicSensorGroup : tests
-    
-//     PiicoDev_VEML6040 --> I2C : uses
-//     PiicoDev_VEML6040 --> Utils : uses
-
-//     Servo --> PWM : depends on
-//     PWM --> Pin : depends on
-//     WheelGroup --> Servo : depends on
-// ```
