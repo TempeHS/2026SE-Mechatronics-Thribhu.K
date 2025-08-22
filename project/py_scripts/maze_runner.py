@@ -321,6 +321,9 @@ class MazeRunnerStateMachine:
         # render current state onto display
         await self.__display.render_current_state(self.state)
         
+        if front < self.__bound:
+            self.state = State.TURNING_TO_SIDE
+        
         if self.state == State.NO_OBJECT_FOUND:
             if front < self.__bound:
                 self.state = State.TURNING_TO_SIDE
@@ -329,7 +332,7 @@ class MazeRunnerStateMachine:
                 await asyncio.sleep(0.1)
         elif self.state == State.TURNING_TO_SIDE:
             self.__wheel_group.move_left(0.75)
-            await asyncio.sleep(1)
+            await asyncio.sleep(1.2)
             self.__wheel_group.stop()
             await asyncio.sleep(1)
             self.state = State.SEARCHING_FOR_GAP
@@ -341,7 +344,7 @@ class MazeRunnerStateMachine:
                 await asyncio.sleep(0.1)
         elif self.state == State.FOUND_GAP:
             self.__wheel_group.move_left(-0.75) # idk why its negative BUT IT WORKS HOORAYYYYY
-            await asyncio.sleep(1)
+            await asyncio.sleep(1.2)
             self.__wheel_group.stop()
             await asyncio.sleep(1)
             self.state = State.NO_OBJECT_FOUND
@@ -351,7 +354,7 @@ class MazeRunnerStateMachine:
             if not await self.__light_sensor.is_green():
                 self.state = State.NO_OBJECT_FOUND
         
-        await self.__light_sensor.debug()
+        # await self.__light_sensor.debug()
         await self.__light_sensor.update()
         if await self.__light_sensor.is_green():
             self.state = State.VICTIM_SENSED
