@@ -272,6 +272,18 @@ _List any additional non-functional requirements_
 
 #pagebreak()
 
+= Final Product
+_Images of the magnificent beast_
+#grid(
+  columns: 3,
+  [#image("Submit/IMG_6213.jpeg")], 
+  [],
+  [#image("Submit/IMG_6214.jpeg")],
+  [#image("Submit/IMG_6215.jpeg")],
+  [#image("Submit/IMG_6216.jpeg")],
+  [#image("Submit/IMG_6217.jpeg")],
+)
+
 = Definitions and acronyms
 
 #table(
